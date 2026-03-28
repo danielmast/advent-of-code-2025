@@ -2,8 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from day1.solution import Direction, Rotation, read_input, solve_part1
-
+from day1.solution import Direction, Rotation, read_input, solve_part1, solve_part2
 
 EXAMPLE_INPUT = Path(__file__).parent / "example_input.txt"
 
@@ -31,10 +30,39 @@ def test_perform_rotation(dial, rotation, expected):
     assert rotation.perform(dial) == expected
 
 
+@pytest.mark.parametrize(
+    "dial, rotation, expected",
+    [
+        (10, Rotation(Direction.RIGHT, 20), 0),
+        (80, Rotation(Direction.RIGHT, 20), 1),
+        (90, Rotation(Direction.RIGHT, 20), 1),
+        (90, Rotation(Direction.RIGHT, 250), 3),
+        (90, Rotation(Direction.RIGHT, 310), 4),
+        (0, Rotation(Direction.LEFT, 20), 0),
+        (10, Rotation(Direction.LEFT, 20), 1),
+        (20, Rotation(Direction.LEFT, 20), 1),
+        (90, Rotation(Direction.LEFT, 20), 0),
+        (90, Rotation(Direction.LEFT, 250), 2),
+        (90, Rotation(Direction.LEFT, 290), 3),
+    ],
+)
+def test_zero_crossings(dial, rotation, expected):
+    assert rotation.zero_crossings(dial) == expected
+
+
 def test_solve_part1():
     puzzle_input = read_input(EXAMPLE_INPUT)
     assert solve_part1(puzzle_input) == 3
 
 
+def test_solve_part2():
+    puzzle_input = read_input(EXAMPLE_INPUT)
+    assert solve_part2(puzzle_input) == 6
+
+
 def test_solve_part1_regression():
     assert solve_part1(read_input()) == 1177
+
+
+def test_solve_part2_regression():
+    assert solve_part2(read_input()) == 6768

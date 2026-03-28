@@ -19,15 +19,30 @@ class Rotation:
     direction: Direction
     distance: int
 
+    def __str__(self) -> str:
+        return f"{self.direction.value}{self.distance}"
+
     @classmethod
     def parse(cls, rotation_string: str) -> Rotation:
         return cls(
             direction=Direction(rotation_string[0]), distance=int(rotation_string[1:])
         )
 
+    def _multiplier(self) -> int:
+        return -1 if self.direction == Direction.LEFT else 1
+
     def perform(self, dial: int) -> int:
-        multiplier = -1 if self.direction == Direction.LEFT else 1
-        return (dial + multiplier * self.distance) % 100
+        return (dial + self._multiplier() * self.distance) % 100
+
+    def zero_crossings(self, dial: int) -> int:
+        passed = abs((dial + self._multiplier() * self.distance) // 100)
+
+        if self.perform(dial) == 0 and self.direction == Direction.LEFT:
+            passed += 1
+        elif dial == 0 and self.direction == Direction.LEFT:
+            passed -= 1
+
+        return passed
 
 
 def read_input(path: Path = INPUT) -> list[Rotation]:
@@ -48,12 +63,30 @@ def solve_part1(puzzle_input: list[Rotation]) -> int:
     return zeroes
 
 
+def solve_part2(puzzle_input: list[Rotation]) -> int:
+    zeroes = 0
+    dial = INITIAL_DIAL
+
+    logger.debug(f"Initial dial: {dial}")
+
+    for rotation in puzzle_input:
+        seen_zero = rotation.zero_crossings(dial)
+        zeroes += seen_zero
+        dial = rotation.perform(dial)
+
+        logger.debug(f"Rotation: {rotation}, Seen zero: {seen_zero}, dial: {dial}")
+
+    return zeroes
+
+
 def main():
     logging.basicConfig(level=logging.INFO)
 
     puzzle_input = read_input()
-    answer = solve_part1(puzzle_input)
-    logger.info(f"The answer is: {answer}")
+    answer_part1 = solve_part1(puzzle_input)
+    answer_part2 = solve_part2(puzzle_input)
+    logger.info(f"Answer part 1: {answer_part1}")
+    logger.info(f"Answer part 2: {answer_part2}")
 
 
 if __name__ == "__main__":
