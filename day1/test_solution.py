@@ -2,7 +2,14 @@ from pathlib import Path
 
 import pytest
 
-from day1.solution import Direction, Rotation, read_input, solve_part1, solve_part2
+from day1.solution import (
+    Direction,
+    Rotation,
+    read_input,
+    solve_part1,
+    solve_part2,
+    INPUT,
+)
 
 EXAMPLE_INPUT = Path(__file__).parent / "example_input.txt"
 
@@ -50,19 +57,25 @@ def test_zero_crossings(dial, rotation, expected):
     assert rotation.zero_crossings(dial) == expected
 
 
-def test_solve_part1():
-    puzzle_input = read_input(EXAMPLE_INPUT)
-    assert solve_part1(puzzle_input) == 3
+@pytest.mark.parametrize(
+    "input_path, expected",
+    [
+        (EXAMPLE_INPUT, 3),
+        (INPUT, 1177),
+    ],
+)
+def test_solve_part1(input_path, expected):
+    puzzle_input = read_input(input_path)
+    assert solve_part1(puzzle_input) == expected
 
 
-def test_solve_part2():
-    puzzle_input = read_input(EXAMPLE_INPUT)
-    assert solve_part2(puzzle_input) == 6
-
-
-def test_solve_part1_regression():
-    assert solve_part1(read_input()) == 1177
-
-
-def test_solve_part2_regression():
-    assert solve_part2(read_input()) == 6768
+@pytest.mark.parametrize(
+    "input_path, expected",
+    [
+        (EXAMPLE_INPUT, 6),
+        (INPUT, 6768),
+    ],
+)
+def test_solve_part2(input_path, expected):
+    puzzle_input = read_input(input_path)
+    assert solve_part2(puzzle_input) == expected
