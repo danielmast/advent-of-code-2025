@@ -83,9 +83,11 @@ def main():
     logging.basicConfig(level=logging.INFO)
 
     puzzle_input = read_input()
+
     answer_part1 = solve_part1(puzzle_input)
-    answer_part2 = solve_part2(puzzle_input)
     logger.info(f"Answer part 1: {answer_part1}")
+
+    answer_part2 = solve_part2(puzzle_input)
     logger.info(f"Answer part 2: {answer_part2}")
 
 
