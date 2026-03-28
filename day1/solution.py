@@ -5,6 +5,9 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+INPUT = Path(__file__).parent / "input.txt"
+INITIAL_DIAL = 50
+
 
 class Direction(Enum):
     LEFT = "L"
@@ -27,14 +30,14 @@ class Rotation:
         return (dial + multiplier * self.distance) % 100
 
 
-def read_input() -> list[Rotation]:
-    with open(Path(__file__).parent / "input.txt") as file:
+def read_input(path: Path = INPUT) -> list[Rotation]:
+    with open(path) as file:
         return [Rotation.parse(line.strip()) for line in file]
 
 
-def solve(puzzle_input: list[Rotation]) -> int:
+def solve_part1(puzzle_input: list[Rotation]) -> int:
     zeroes = 0
-    dial = 50
+    dial = INITIAL_DIAL
 
     for rotation in puzzle_input:
         dial = rotation.perform(dial)
@@ -49,7 +52,7 @@ def main():
     logging.basicConfig(level=logging.INFO)
 
     puzzle_input = read_input()
-    answer = solve(puzzle_input)
+    answer = solve_part1(puzzle_input)
     logger.info(f"The answer is: {answer}")
 
 
