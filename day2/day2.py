@@ -27,10 +27,10 @@ class IDRange:
     @staticmethod
     def _is_valid_id(product_id: int, use_divisor_range: bool) -> bool:
         product_id_str = str(product_id)
-        divisor_range = range(2, len(str(product_id)) + 1) if use_divisor_range else [2]
+        divisor_range = range(2, len(product_id_str) + 1) if use_divisor_range else [2]
 
         for divisor in divisor_range:
-            if len(str(product_id)) % divisor != 0:
+            if len(product_id_str) % divisor != 0:
                 continue
 
             part_len = len(product_id_str) // divisor
@@ -51,10 +51,18 @@ class Day2(Day[list[IDRange], int, int]):
             ]
 
     def solve_part1(self) -> int:
-        return sum(sum(id_range.invalid_ids(False)) for id_range in self.puzzle_input)
+        return sum(
+            product_id
+            for id_range in self.puzzle_input
+            for product_id in id_range.invalid_ids(False)
+        )
 
     def solve_part2(self) -> int:
-        return sum(sum(id_range.invalid_ids(True)) for id_range in self.puzzle_input)
+        return sum(
+            product_id
+            for id_range in self.puzzle_input
+            for product_id in id_range.invalid_ids(True)
+        )
 
 
 def main():
