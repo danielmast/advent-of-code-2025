@@ -1,14 +1,10 @@
 import logging
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Iterable
 
+from day.day import Day
+
 logger = logging.getLogger(__name__)
-
-INPUT = Path(__file__).parent / "input.txt"
-
-type PuzzleInput = list[IDRange]
-type PuzzleOutput = int
 
 
 @dataclass
@@ -46,32 +42,24 @@ class IDRange:
         return True
 
 
-def read_input(path: Path = INPUT) -> PuzzleInput:
-    with open(path) as file:
-        return [
-            IDRange.parse(range_string)
-            for range_string in file.read().strip().split(",")
-        ]
+class Day2(Day[list[IDRange], int, int]):
+    def read_input(self) -> list[IDRange]:
+        with open(self.input_path) as file:
+            return [
+                IDRange.parse(range_string)
+                for range_string in file.read().strip().split(",")
+            ]
 
+    def solve_part1(self) -> int:
+        return sum(sum(id_range.invalid_ids(False)) for id_range in self.puzzle_input)
 
-def solve_part1(puzzle_input: PuzzleInput) -> PuzzleOutput:
-    return sum(sum(id_range.invalid_ids(False)) for id_range in puzzle_input)
-
-
-def solve_part2(puzzle_input: PuzzleInput) -> PuzzleOutput:
-    return sum(sum(id_range.invalid_ids(True)) for id_range in puzzle_input)
+    def solve_part2(self) -> int:
+        return sum(sum(id_range.invalid_ids(True)) for id_range in self.puzzle_input)
 
 
 def main():
-    logging.basicConfig(level=logging.INFO)
-
-    puzzle_input = read_input()
-
-    answer_part1 = solve_part1(puzzle_input)
-    logger.info(f"Answer part 1: {answer_part1}")
-
-    answer_part2 = solve_part2(puzzle_input)
-    logger.info(f"Answer part 2: {answer_part2}")
+    day = Day2()
+    day.run()
 
 
 if __name__ == "__main__":

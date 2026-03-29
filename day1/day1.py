@@ -1,11 +1,11 @@
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from pathlib import Path
+
+from day.day import Day
 
 logger = logging.getLogger(__name__)
 
-INPUT = Path(__file__).parent / "input.txt"
 INITIAL_DIAL = 50
 
 
@@ -45,50 +45,42 @@ class Rotation:
         return passed
 
 
-def read_input(path: Path = INPUT) -> list[Rotation]:
-    with open(path) as file:
-        return [Rotation.parse(line.strip()) for line in file]
+class Day1(Day[list[Rotation], int, int]):
+    def read_input(self) -> list[Rotation]:
+        with open(self.input_path) as file:
+            return [Rotation.parse(line.strip()) for line in file]
 
+    def solve_part1(self) -> int:
+        zeroes = 0
+        dial = INITIAL_DIAL
 
-def solve_part1(puzzle_input: list[Rotation]) -> int:
-    zeroes = 0
-    dial = INITIAL_DIAL
+        for rotation in self.puzzle_input:
+            dial = rotation.perform(dial)
 
-    for rotation in puzzle_input:
-        dial = rotation.perform(dial)
+            if dial == 0:
+                zeroes += 1
 
-        if dial == 0:
-            zeroes += 1
+        return zeroes
 
-    return zeroes
+    def solve_part2(self) -> int:
+        zeroes = 0
+        dial = INITIAL_DIAL
 
+        logger.debug(f"Initial dial: {dial}")
 
-def solve_part2(puzzle_input: list[Rotation]) -> int:
-    zeroes = 0
-    dial = INITIAL_DIAL
+        for rotation in self.puzzle_input:
+            seen_zero = rotation.zero_crossings(dial)
+            zeroes += seen_zero
+            dial = rotation.perform(dial)
 
-    logger.debug(f"Initial dial: {dial}")
+            logger.debug(f"Rotation: {rotation}, Seen zero: {seen_zero}, dial: {dial}")
 
-    for rotation in puzzle_input:
-        seen_zero = rotation.zero_crossings(dial)
-        zeroes += seen_zero
-        dial = rotation.perform(dial)
-
-        logger.debug(f"Rotation: {rotation}, Seen zero: {seen_zero}, dial: {dial}")
-
-    return zeroes
+        return zeroes
 
 
 def main():
-    logging.basicConfig(level=logging.INFO)
-
-    puzzle_input = read_input()
-
-    answer_part1 = solve_part1(puzzle_input)
-    logger.info(f"Answer part 1: {answer_part1}")
-
-    answer_part2 = solve_part2(puzzle_input)
-    logger.info(f"Answer part 2: {answer_part2}")
+    day = Day1()
+    day.run()
 
 
 if __name__ == "__main__":
