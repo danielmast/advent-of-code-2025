@@ -47,7 +47,7 @@ def test_is_valid_id(product_id, use_divisor_range, expected):
     ],
 )
 def test_invalid_ids(id_range, use_divisor_range, expected):
-    assert id_range.invalid_ids(use_divisor_range) == expected
+    assert set(id_range.invalid_ids(use_divisor_range)) == expected
 
 
 @pytest.mark.parametrize(

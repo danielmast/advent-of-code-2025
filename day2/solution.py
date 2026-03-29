@@ -1,6 +1,7 @@
 import logging
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Iterable
 
 logger = logging.getLogger(__name__)
 
@@ -20,25 +21,26 @@ class IDRange:
         start, end = s.split("-")
         return cls(int(start), int(end))
 
-    def invalid_ids(self, use_divisor_range: bool) -> set[int]:
-        return {
+    def invalid_ids(self, use_divisor_range: bool) -> Iterable[int]:
+        return (
             product_id
             for product_id in range(self.start, self.end + 1)
             if not self._is_valid_id(product_id, use_divisor_range)
-        }
+        )
 
     @staticmethod
     def _is_valid_id(product_id: int, use_divisor_range: bool) -> bool:
+        product_id_str = str(product_id)
         divisor_range = range(2, len(str(product_id)) + 1) if use_divisor_range else [2]
 
         for divisor in divisor_range:
             if len(str(product_id)) % divisor != 0:
                 continue
 
-            part_len = len(str(product_id)) // divisor
-            part = str(product_id)[:part_len]
+            part_len = len(product_id_str) // divisor
+            part = product_id_str[:part_len]
 
-            if str(product_id).count(part) == divisor:
+            if product_id_str.count(part) == divisor:
                 return False
 
         return True
@@ -46,7 +48,10 @@ class IDRange:
 
 def read_input(path: Path = INPUT) -> PuzzleInput:
     with open(path) as file:
-        return [IDRange.parse(range_string) for range_string in file.read().split(",")]
+        return [
+            IDRange.parse(range_string)
+            for range_string in file.read().strip().split(",")
+        ]
 
 
 def solve_part1(puzzle_input: PuzzleInput) -> PuzzleOutput:
