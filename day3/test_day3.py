@@ -12,24 +12,14 @@ class TestDay3(DayTest):
     answer_part2 = 172516781546707
 
     @pytest.mark.parametrize(
-        "digits, expected",
-        [
-            (987654321111111, 9),
-            (234234234234278, 8),
-        ],
-    )
-    def test_largest_digit(self, digits, expected):
-        assert Bank._largest_digit(digits) == expected
-
-    @pytest.mark.parametrize(
         "bank, length, expected",
         [
-            (Bank(987654321111111), 2, 98),
-            (Bank(987654321111111), 12, 987654321111),
-            (Bank(234234234234278), 2, 78),
-            (Bank(234234234234278), 12, 434234234278),
-            (Bank(818181911112111), 2, 92),
-            (Bank(818181911112111), 12, 888911112111),
+            (Bank("987654321111111"), 2, 98),
+            (Bank("987654321111111"), 12, 987654321111),
+            (Bank("234234234234278"), 2, 78),
+            (Bank("234234234234278"), 12, 434234234278),
+            (Bank("818181911112111"), 2, 92),
+            (Bank("818181911112111"), 12, 888911112111),
         ],
     )
     def test_largest_joltage(self, bank, length, expected):
