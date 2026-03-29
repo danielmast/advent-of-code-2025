@@ -8,7 +8,7 @@ class Bank:
     digits: str
 
     def largest_joltage(self, length) -> int:
-        joltage_digits = []
+        largest_joltage = ""
         start = 0
 
         for i in range(length):
@@ -17,15 +17,15 @@ class Bank:
             substring = self.digits[start:end]
 
             joltage_digit = max(substring)
-            joltage_digits.append(joltage_digit)
+            largest_joltage += joltage_digit
 
             start = substring.index(joltage_digit) + start + 1
 
             logger.debug(
-                f"Substring: {substring}, joltage digits: {joltage_digits}, start: {start}"
+                f"Substring: {substring}, joltage digits: {largest_joltage}, start: {start}"
             )
 
-        return int("".join(joltage_digits))
+        return int(largest_joltage)
 
 
 class Day3(Day[list[Bank], int, int]):
