@@ -30,6 +30,20 @@ class Grid:
             for tile in row:
                 yield tile
 
+    def removable_papers(self) -> list[Tile]:
+        neighbour_limit = 4
+
+        return [
+            tile
+            for tile in self.tile_iterator()
+            if tile.is_paper and tile.num_paper_neighbours(self) < neighbour_limit
+        ]
+
+    @staticmethod
+    def remove_papers(tiles: list[Tile]) -> None:
+        for tile in tiles:
+            tile.is_paper = False
+
 
 @dataclass
 class Tile:
@@ -55,17 +69,21 @@ class Day4(Day):
         return Grid.parse_file(self.input_path)
 
     def solve_part1(self) -> int:
-        neighbour_limit = 4
-
-        return sum(
-            1
-            for tile in self.puzzle_input.tile_iterator()
-            if tile.is_paper
-            and tile.num_paper_neighbours(self.puzzle_input) < neighbour_limit
-        )
+        return len(self.puzzle_input.removable_papers())
 
     def solve_part2(self) -> int:
-        pass
+        removed_total = 0
+
+        while True:
+            removable_papers = self.puzzle_input.removable_papers()
+
+            if not removable_papers:
+                break
+
+            removed_total += len(removable_papers)
+            self.puzzle_input.remove_papers(removable_papers)
+
+        return removed_total
 
 
 def main():
