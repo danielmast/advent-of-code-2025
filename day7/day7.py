@@ -40,32 +40,23 @@ class Grid:
 
 
 class Node:
-    is_splitter: bool | None
-    children: set[Node]
-
     def __init__(self) -> None:
-        self.children = set()
-        self._total_paths = None
-        self._splitters = None
+        self.children: set[Node] = set()
 
     @cached_property
     def total_paths(self) -> int:
-        if not self._total_paths:
-            if not self.children:
-                self._total_paths = 1
-            else:
-                self._total_paths = sum(c.total_paths for c in self.children)
-        return self._total_paths
+        if not self.children:
+            return 1
+        return sum(c.total_paths for c in self.children)
 
     @cached_property
     def splitters(self) -> set[Node]:
-        if not self._splitters:
-            self._splitters = {
-                node for child in self.children for node in child.splitters
-            }
-            if len(self.children) == 2:
-                self._splitters.add(self)
-        return self._splitters
+        result = {node for child in self.children for node in child.splitters}
+
+        if len(self.children) == 2:
+            result.add(self)
+
+        return result
 
 
 @dataclass
@@ -87,9 +78,7 @@ class DAG:
             below_position = head.below()
 
             if grid.contains(below_position):
-                below_symbol = grid[below_position]
-
-                if below_symbol == "^":
+                if grid[below_position] == "^":
                     new_heads = {below_position.left(), below_position.right()}
                 else:
                     new_heads = {below_position}
