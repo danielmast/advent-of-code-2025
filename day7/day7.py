@@ -35,10 +35,15 @@ class Grid:
 
 
 class Node:
+    is_splitter: bool | None
     children: set[Node]
 
-    def __init__(self):
+    def __init__(self) -> None:
+        self.is_splitter = None
         self.children = set()
+
+    def set_is_splitter(self, is_splitter: bool) -> None:
+        self.is_splitter = is_splitter
 
     def add_child(self, child: Node) -> None:
         self.children.add(child)
@@ -48,6 +53,13 @@ class Node:
         if not self.children:
             return 1
         return sum(c.total_paths() for c in self.children)
+
+    @cache
+    def splitters(self) -> set[Node]:
+        result = {node for child in self.children for node in child.splitters()}
+        if self.is_splitter:
+            result.add(self)
+        return result
 
 
 @dataclass
@@ -63,7 +75,7 @@ class DAG:
         heads = {start_position}
 
         while heads:
-            head = list(heads)[0]
+            head = next(iter(heads))
             node = nodes[head]
 
             try:
@@ -71,8 +83,10 @@ class DAG:
                 below_symbol = grid.get(below_position)
 
                 if below_symbol == "^":
+                    node.set_is_splitter(True)
                     new_heads = {below_position.left(), below_position.right()}
                 else:
+                    node.set_is_splitter(False)
                     new_heads = {below_position}
 
                 for new_head in new_heads:
@@ -94,40 +108,21 @@ class DAG:
     def total_paths(self) -> int:
         return self.start.total_paths()
 
+    def num_splitters(self) -> int:
+        return len(self.start.splitters())
+
 
 class Day7(Day):
-    def read_input(self) -> Grid:
+    def read_input(self) -> DAG:
         with open(self.input_path) as file:
             lines = [line.rstrip("\n") for line in file]
-        return Grid(lines)
+        return DAG.from_grid(Grid(lines))
 
     def solve_part1(self) -> int:
-        splits = set()
-        heads = {self.puzzle_input.get_start_position()}
-
-        while heads:
-            head = list(heads)[0]
-
-            try:
-                below_position = head.below()
-                below_symbol = self.puzzle_input.get(below_position)
-
-                if below_symbol == "^":
-                    splits.add(below_position)
-                    heads.add(below_position.left())
-                    heads.add(below_position.right())
-                else:
-                    heads.add(below_position)
-            except IndexError:
-                pass
-
-            heads.remove(head)
-
-        return len(splits)
+        return self.puzzle_input.num_splitters()
 
     def solve_part2(self) -> int:
-        dag = DAG.from_grid(self.puzzle_input)
-        return dag.total_paths()
+        return self.puzzle_input.total_paths()
 
 
 def main():
