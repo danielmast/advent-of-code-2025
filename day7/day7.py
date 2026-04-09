@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from functools import cache
+from functools import cached_property
 
 from day.day import Day
 
@@ -24,14 +24,19 @@ class Grid:
     rows: list[str]
 
     def get_start_position(self) -> Position:
-        for y in range(len(self.rows)):
-            for x in range(len(self.rows[y])):
-                if self.rows[y][x] == "S":
+        for y, row in enumerate(self.rows):
+            for x, char in enumerate(row):
+                if char == "S":
                     return Position(x, y)
         raise ValueError("Start not found")
 
-    def get(self, position: Position) -> str:
+    def __getitem__(self, position: Position) -> str:
         return self.rows[position.y][position.x]
+
+    def contains(self, position: Position) -> bool:
+        return 0 <= position.y < len(self.rows) and 0 <= position.x < len(
+            self.rows[position.y]
+        )
 
 
 class Node:
@@ -39,27 +44,28 @@ class Node:
     children: set[Node]
 
     def __init__(self) -> None:
-        self.is_splitter = None
         self.children = set()
+        self._total_paths = None
+        self._splitters = None
 
-    def set_is_splitter(self, is_splitter: bool) -> None:
-        self.is_splitter = is_splitter
-
-    def add_child(self, child: Node) -> None:
-        self.children.add(child)
-
-    @cache
+    @cached_property
     def total_paths(self) -> int:
-        if not self.children:
-            return 1
-        return sum(c.total_paths() for c in self.children)
+        if not self._total_paths:
+            if not self.children:
+                self._total_paths = 1
+            else:
+                self._total_paths = sum(c.total_paths for c in self.children)
+        return self._total_paths
 
-    @cache
+    @cached_property
     def splitters(self) -> set[Node]:
-        result = {node for child in self.children for node in child.splitters()}
-        if self.is_splitter:
-            result.add(self)
-        return result
+        if not self._splitters:
+            self._splitters = {
+                node for child in self.children for node in child.splitters
+            }
+            if len(self.children) == 2:
+                self._splitters.add(self)
+        return self._splitters
 
 
 @dataclass
@@ -78,15 +84,14 @@ class DAG:
             head = next(iter(heads))
             node = nodes[head]
 
-            try:
-                below_position = head.below()
-                below_symbol = grid.get(below_position)
+            below_position = head.below()
+
+            if grid.contains(below_position):
+                below_symbol = grid[below_position]
 
                 if below_symbol == "^":
-                    node.set_is_splitter(True)
                     new_heads = {below_position.left(), below_position.right()}
                 else:
-                    node.set_is_splitter(False)
                     new_heads = {below_position}
 
                 for new_head in new_heads:
@@ -97,19 +102,17 @@ class DAG:
                         nodes[new_head] = new_node
                         heads.add(new_head)
 
-                    node.add_child(new_node)
-            except IndexError:
-                pass
+                    node.children.add(new_node)
 
             heads.remove(head)
 
         return DAG(start_node)
 
     def total_paths(self) -> int:
-        return self.start.total_paths()
+        return self.start.total_paths
 
-    def num_splitters(self) -> int:
-        return len(self.start.splitters())
+    def splitters(self) -> set[Node]:
+        return self.start.splitters
 
 
 class Day7(Day):
@@ -119,7 +122,7 @@ class Day7(Day):
         return DAG.from_grid(Grid(lines))
 
     def solve_part1(self) -> int:
-        return self.puzzle_input.num_splitters()
+        return len(self.puzzle_input.splitters())
 
     def solve_part2(self) -> int:
         return self.puzzle_input.total_paths()
