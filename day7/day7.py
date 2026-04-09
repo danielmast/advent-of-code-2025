@@ -68,37 +68,22 @@ class DAG:
 
             try:
                 below_position = head.below()
-
                 below_symbol = grid.get(below_position)
 
                 if below_symbol == "^":
-                    if below_position.left() in nodes:
-                        below_left = nodes[below_position.left()]
-                    else:
-                        below_left = Node()
-                        nodes[below_position.left()] = below_left
-                        heads.add(below_position.left())
-
-                    node.add_child(below_left)
-
-                    if below_position.right() in nodes:
-                        below_right = nodes[below_position.right()]
-                    else:
-                        below_right = Node()
-                        nodes[below_position.right()] = below_right
-                        heads.add(below_position.right())
-
-                    node.add_child(below_right)
-
+                    new_heads = {below_position.left(), below_position.right()}
                 else:
-                    if below_position in nodes:
-                        below = nodes[below_position]
-                    else:
-                        below = Node()
-                        nodes[below_position] = below
-                        heads.add(below_position)
+                    new_heads = {below_position}
 
-                    node.add_child(below)
+                for new_head in new_heads:
+                    if new_head in nodes:
+                        new_node = nodes[new_head]
+                    else:
+                        new_node = Node()
+                        nodes[new_head] = new_node
+                        heads.add(new_head)
+
+                    node.add_child(new_node)
             except IndexError:
                 pass
 
