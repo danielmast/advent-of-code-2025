@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from functools import cache
 
 from day.day import Day
 
@@ -33,6 +34,82 @@ class Grid:
         return self.rows[position.y][position.x]
 
 
+class Node:
+    children: set[Node]
+
+    def __init__(self):
+        self.children = set()
+
+    def add_child(self, child: Node) -> None:
+        self.children.add(child)
+
+    @cache
+    def total_paths(self) -> int:
+        if not self.children:
+            return 1
+        return sum(c.total_paths() for c in self.children)
+
+
+@dataclass
+class DAG:
+    start: Node
+
+    @classmethod
+    def from_grid(cls, grid: Grid) -> DAG:
+        start_position = grid.get_start_position()
+        start_node = Node()
+
+        nodes: dict[Position, Node] = {start_position: start_node}
+        heads = {start_position}
+
+        while heads:
+            head = list(heads)[0]
+            node = nodes[head]
+
+            try:
+                below_position = head.below()
+
+                below_symbol = grid.get(below_position)
+
+                if below_symbol == "^":
+                    if below_position.left() in nodes:
+                        below_left = nodes[below_position.left()]
+                    else:
+                        below_left = Node()
+                        nodes[below_position.left()] = below_left
+                        heads.add(below_position.left())
+
+                    node.add_child(below_left)
+
+                    if below_position.right() in nodes:
+                        below_right = nodes[below_position.right()]
+                    else:
+                        below_right = Node()
+                        nodes[below_position.right()] = below_right
+                        heads.add(below_position.right())
+
+                    node.add_child(below_right)
+
+                else:
+                    if below_position in nodes:
+                        below = nodes[below_position]
+                    else:
+                        below = Node()
+                        nodes[below_position] = below
+                        heads.add(below_position)
+
+                    node.add_child(below)
+            except IndexError:
+                pass
+
+            heads.remove(head)
+
+        return DAG(start_node)
+
+    def total_paths(self) -> int:
+        return self.start.total_paths()
+
+
 class Day7(Day):
     def read_input(self) -> Grid:
         with open(self.input_path) as file:
@@ -40,19 +117,6 @@ class Day7(Day):
         return Grid(lines)
 
     def solve_part1(self) -> int:
-        """
-        Start at S
-        Traverse down
-        If a splitter is met, create new heads
-        Keep the positions of the heads in a set, so that there are no duplicates
-
-        So basically, iterate over each head (starting with one), and look down.
-        if splitter, create 2 new heads. of dot, create 1 new head
-        count up the number of times a splitter is met
-
-        Stop when the head goes out of bounds
-        """
-
         splits = set()
         heads = {self.puzzle_input.get_start_position()}
 
@@ -77,28 +141,8 @@ class Day7(Day):
         return len(splits)
 
     def solve_part2(self) -> int:
-        timelines = 1
-        heads = [self.puzzle_input.get_start_position()]
-
-        while heads:
-            head = heads[0]
-
-            try:
-                below_position = head.below()
-                below_symbol = self.puzzle_input.get(below_position)
-
-                if below_symbol == "^":
-                    timelines += 1
-                    heads.append(below_position.left())
-                    heads.append(below_position.right())
-                else:
-                    heads.append(below_position)
-            except IndexError:
-                pass
-
-            heads.remove(head)
-
-        return timelines
+        dag = DAG.from_grid(self.puzzle_input)
+        return dag.total_paths()
 
 
 def main():

@@ -7,4 +7,4 @@ class TestDay7(DayTest):
     example_answer_part1 = 21
     example_answer_part2 = 40
     answer_part1 = 1535
-    answer_part2 = ...
+    answer_part2 = 4404709551015
