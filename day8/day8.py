@@ -13,7 +13,6 @@ class JunctionBox:
     x: int
     y: int
     z: int
-    connected: set[JunctionBox]
 
     def to_list(self) -> list[int]:
         return [self.x, self.y, self.z]
@@ -22,28 +21,10 @@ class JunctionBox:
     def distance(self, other: JunctionBox) -> float:
         return math.dist(self.to_list(), other.to_list())
 
-    def connect(self, other: JunctionBox) -> None:
-        print(f"Connect: {self} <-> {other}")
-        self.connected.add(other)
-        other.connected.add(self)
-
-    def circuit(self, seen=None) -> set[JunctionBox]:
-        if seen is None:
-            seen = {self}
-        circuit = self.connected.copy()
-        circuit.add(self)
-
-        for box in self.connected:
-            if box not in seen:
-                seen = seen.union({box})
-                circuit = circuit.union(box.circuit(seen))
-
-        return circuit
-
     @classmethod
     def parse(cls, junction_box_string: str) -> JunctionBox:
         x, y, z = [int(i) for i in junction_box_string.split(",")]
-        return cls(x=x, y=y, z=z, connected=set())
+        return cls(x=x, y=y, z=z)
 
     def __str__(self):
         return str(self.to_list())
@@ -81,6 +62,12 @@ class Day8(Day[list[JunctionBox], int, int]):
         with open(self.input_path) as file:
             return [JunctionBox.parse(line.strip()) for line in file]
 
+    def get_lookup(self) -> dict[JunctionBox, set[JunctionBox]]:
+        lookup = {}
+        for box in self.puzzle_input:
+            lookup[box] = {box}
+        return lookup
+
     def distances(self) -> list[Connection]:
         distances = []
         for i, box_i in enumerate(self.puzzle_input):
@@ -101,42 +88,40 @@ class Day8(Day[list[JunctionBox], int, int]):
         distances = self.distances()
         distances.sort()
 
-        for i in range(self.get_connection_count()):
-            distances[i].box1.connect(distances[i].box2)
+        lookup = self.get_lookup()
 
-        circuits = self.circuits()
+        for i in range(self.get_connection_count()):
+            box1 = distances[i].box1
+            box2 = distances[i].box2
+            circuit1 = lookup[box1]
+            circuit2 = lookup[box2]
+            merged = circuit1.union(circuit2)
+            for box in merged:
+                lookup[box] = merged
+
+        circuits = [set(s) for s in set(frozenset(s) for s in lookup.values())]
         largest_circuits = sorted(circuits, key=len, reverse=True)[:3]
         multiplied_sizes = math.prod(len(circuit) for circuit in largest_circuits)
 
         return multiplied_sizes
 
-    def circuits(self) -> list[set[JunctionBox]]:
-        seen_boxes = set()
-        circuits = []
-        for box in self.puzzle_input:
-            if box not in seen_boxes:
-                circuit = box.circuit()
-                circuits.append(circuit)
-                seen_boxes = seen_boxes.union(circuit)
-
-        return circuits
-
     def solve_part2(self) -> int:
-        """
-        Like in part 1, also connect, but dont stop at 1000
-        Instead, after every connection, check if the circuit length of a random box equals the input size
-        Then multiply the Xs of the last connected boxes
-        """
-
         distances = self.distances()
         distances.sort()
 
-        for distance in distances:
-            distance.box1.connect(distance.box2)
+        lookup = self.get_lookup()
 
-            circuit = self.puzzle_input[0].circuit()
-            if len(circuit) == len(self.puzzle_input):
-                return distance.box1.x * distance.box2.x
+        for i in range(len(distances)):
+            box1 = distances[i].box1
+            box2 = distances[i].box2
+            circuit1 = lookup[box1]
+            circuit2 = lookup[box2]
+            merged = circuit1.union(circuit2)
+            for box in merged:
+                lookup[box] = merged
+
+            if len(merged) == len(self.puzzle_input):
+                return box1.x * box2.x
 
         raise AssertionError
 
