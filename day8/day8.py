@@ -122,7 +122,23 @@ class Day8(Day[list[JunctionBox], int, int]):
         return circuits
 
     def solve_part2(self) -> int:
-        raise NotImplementedError
+        """
+        Like in part 1, also connect, but dont stop at 1000
+        Instead, after every connection, check if the circuit length of a random box equals the input size
+        Then multiply the Xs of the last connected boxes
+        """
+
+        distances = self.distances()
+        distances.sort()
+
+        for distance in distances:
+            distance.box1.connect(distance.box2)
+
+            circuit = self.puzzle_input[0].circuit()
+            if len(circuit) == len(self.puzzle_input):
+                return distance.box1.x * distance.box2.x
+
+        raise AssertionError
 
 
 def main():
